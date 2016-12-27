@@ -1,0 +1,21 @@
+{
+	"name": "ntesic/phalcon-generator\\",
+	"description": "Model and CRUD generator for Phalcon PHP framework",
+	"minimum-stability": "dev",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "ntesic"
+		}
+	],
+	"require": {
+		"php": "^7.0",
+		"ext-phalcon" : "^3.0",
+		"ntesic/phalcon-boilerplate": "@dev"
+	},
+	"autoload": {
+		"psr-4": {
+			"ntesic\\generator\\": ""
+		}
+	}
+}
