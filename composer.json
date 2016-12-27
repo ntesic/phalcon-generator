@@ -1,5 +1,5 @@
 {
-	"name": "ntesic/phalcon-generator\\",
+	"name": "ntesic/phalcon-generator",
 	"description": "Model and CRUD generator for Phalcon PHP framework",
 	"minimum-stability": "dev",
 	"license": "MIT",
