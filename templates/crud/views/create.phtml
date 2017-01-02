@@ -1,0 +1,33 @@
+<?php
+/**
+ * @var \ntesic\generator\generator\crud\Builder $builder
+ */
+echo "<?php\n";
+?>
+
+/**
+* @var \Phalcon\Mvc\View $this
+* @var <?= $builder->getModelClass() ?> $model
+*/
+use \ntesic\boilerplate\Helpers\Tag;
+use \ntesic\boilerplate\Helpers\Url;
+<?= "?>\n" ?>
+<h1>
+    <?=\ntesic\boilerplate\Helpers\Text::singularize(\ntesic\boilerplate\Helpers\Text::camel2words($builder->getClassName($builder->getModelClass()))) . "\n"?>
+    <small>
+        New
+    </small>
+</h1>
+
+<div class="clearfix crud-navigation">
+    <!-- menu buttons -->
+    <div class='pull-left'>
+        <?="<?= Tag::linkTo([\n" ?>
+            'action' => Url::previous(),
+            'text' => 'Cancel',
+            'class' => 'btn btn-info',
+        ]) ?>
+    </div>
+</div>
+
+<?="<?php \$form->renderForm() ?>" ?>

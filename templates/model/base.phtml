@@ -1,0 +1,111 @@
+<?php
+/**
+ * Copyright (c) 2016.
+ * @author Nikola Tesic (nikolatesic@gmail.com)
+ */
+
+/**
+ * Created by PhpStorm.
+ * User: Nikola
+ * Date: 12/30/2016
+ * Time: 5:47 PM
+ */
+/**
+ * @var \ntesic\generator\generator\model\Builder $builder
+ * @var \Phalcon\Db\Column $column
+ */
+echo "<?php\n";
+?>
+
+namespace <?=$builder->getNamespace($builder->getModelClass())?>\Base;
+
+use ntesic\boilerplate\models\BaseModel;
+use Phalcon\Validation;
+
+class <?=$builder->getClassName($builder->getModelClass()) ?> extends BaseModel
+{
+
+<?php
+// Generate model attributes
+foreach ($builder->getDbColumns() as $column) {
+    $templateAttributes = <<<EOD
+    /**
+     * @var %s%s%s
+     * @Column(type="%s"%s, nullable=%s)
+     */
+    public \$%s;
+
+EOD;
+    echo sprintf($templateAttributes,
+        $builder->getPhpType($column),
+        $column->isPrimary() ? PHP_EOL.'     * @Primary' : '',
+        $column->isAutoIncrement() ? PHP_EOL.'     * @Identity' : '',
+        $builder->getPhpType($column),
+        $column->getSize() ? ', length=' . $column->getSize() : '',
+        $column->isNotNull() ? 'false' : 'true', $column->getName());
+
+}
+?>
+
+    /**
+     * Initialize method for model.
+     */
+    public function initialize()
+    {
+        <?="\$this->setSchema('" . $builder->getSchema() . "')" ?>;
+<?php
+foreach ($builder->generateRelations() as $relation) {
+    echo $relation;
+}
+?>
+    }
+
+    /**
+     * Returns table name mapped in the model.
+     *
+     * @return string
+     */
+    public function getSource()
+    {
+        return '<?=$builder->getTable() ?>';
+    }
+
+    /**
+     * Independent Column Mapping.
+     * Keys are the real names in the table and the values their names in the application
+     *
+     * @return array
+     */
+    public function columnMap()
+    {
+        return [
+<?php
+foreach ($builder->getDbColumns() as $column) {
+    echo '            ' . sprintf('\'%s\' => \'%s\'', $column->getName(), $column->getName()) . ",\n";
+}
+?>
+        ];
+    }
+
+    /**
+     * Auto generated method, that returns a human-readable name as string
+     * for this model. This string can be called in foreign dropdown-fields or
+     * foreign index-views as a representative value for the current instance.
+     *
+     * @return string
+     */
+    public function getToString()
+    {
+        return $this-><?=$builder->getToString() ?>;
+    }
+
+    public function validation()
+    {
+        $validator = new Validation();
+<?php
+foreach($builder->getDbColumns() as $column) {
+    echo $builder->addValidator($builder::VALIDATOR_REQUIRED, $column->getName());
+}
+?>
+    }
+}

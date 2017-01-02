@@ -1,0 +1,191 @@
+<?php
+/**
+ * Copyright (c) 2016.
+ * @author Nikola Tesic (nikolatesic@gmail.com)
+ */
+
+/**
+ * Created by PhpStorm.
+ * User: Nikola
+ * Date: 12/29/2016
+ * Time: 11:21 AM
+ */
+/**
+ * @var \ntesic\generator\generator\crud\Builder $builder
+ */
+echo "<?php\n";
+?>
+
+namespace <?= $builder->getNamespace($builder->getControllerClass()) ?>\Base;
+
+use ntesic\boilerplate\controllers\BaseController;
+use ntesic\boilerplate\data\QueryDataProvider;
+use ntesic\boilerplate\Helpers\Url;
+use Phalcon\Exception;
+use <?= $builder->getModelClass() ?>;
+use <?= $builder->getFormClass() ?>;
+use Phalcon\Mvc\Model\Message;
+use Phalcon\Mvc\Model\MetaData\Memory;
+
+class <?= $builder->getClassName($builder->getControllerClass()) ?> extends BaseController
+{
+
+    /**
+    * Lists all <?=$builder->getClassName($builder->getModelClass()) ?> models
+    */
+    public function IndexAction()
+    {
+        Url::remember();
+        $query = $this->modelsManager->createBuilder()->from('<?= $builder->getModelClass() ?>');
+        $dataProvider = new QueryDataProvider([
+            'query' => $query,
+        ]);
+        $this->jquery->compile($this->view);
+        $this->view->setVars([
+            'dataProvider' => $dataProvider,
+        ]);
+    }
+
+    /**
+    * Display single a <?=$builder->getClassName($builder->getModelClass()) ?> model
+    */
+    public function ViewAction()
+    {
+        Url::remember();
+        $model = $this->findModel($this->request->getQuery());
+        $this->jquery->compile($this->view);
+        $this->view->setVars([
+            'model' => $model
+        ]);
+    }
+
+    /**
+    * Display single a <?=$builder->getClassName($builder->getModelClass()) ?> model
+    */
+    public function CreateAction()
+    {
+        $model = new <?=$builder->getClassName($builder->getModelClass()) ?>();
+        $form = new <?= $builder->getClassName($builder->getFormClass()) ?>([
+            'model' => $model,
+        ]);
+        $this->view->setVars([
+            'form' => $form,
+            'model' => $model,
+        ]);
+        if ($this->request->isPost()) {
+            if (!$form->isValid($this->request->getPost())) {
+                // If the form failed validation, add the errors to the flash error message.
+                foreach ($form->getMessages() as $message) {
+                    $this->flash->error($message->getMessage());
+                }
+            } else {
+                try {
+                    if ($form->bind($this->request->getPost(), $model) && $model->save()) {
+                        // Redirect to view
+                        $this->response->redirect($this->url->get('/view',$this->generateParams($model), null, $this->router->getModuleName() . '/' . $this->router->getControllerName()));
+                    } else {
+                        foreach ($model->getMessages() as $message) {
+                            $this->flash->error($message->getMessage());
+                        }
+                    }
+                } catch (Exception $e) {
+                    $this->flash->error($e->getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+    * Updates an existing <?=$builder->getClassName($builder->getModelClass()) ?> model.
+    * If update is successful, the browser will be redirected to the 'view' page.
+    */
+    public function UpdateAction()
+    {
+        $model = $this->findModel($this->request->getQuery());
+        $form = new <?= $builder->getClassName($builder->getFormClass()) ?>([
+            'model' => $model,
+        ]);
+        $this->view->setVars([
+            'form' => $form,
+            'model' => $model,
+        ]);
+        if ($this->request->isPost()) {
+            if (!$form->isValid($this->request->getPost())) {
+                // If the form failed validation, add the errors to the flash error message.
+                foreach ($form->getMessages() as $message) {
+                    $this->flashSession->error($message->getMessage());
+                }
+            } else {
+                try {
+                    if ($form->bind($this->request->getPost(), $model) && $model->save()) {
+                        $this->response->redirect($this->url->get('/view', $this->generateParams($model), null, $this->router->getModuleName() . '/' . $this->router->getControllerName()));
+                    } else {
+                        foreach ($model->getMessages() as $message) {
+                            $this->flashSession->error($message->getMessage());
+                        }
+                    }
+                } catch (Exception $e) {
+                    $this->flashSession->error($e->getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+    * Deletes an existing <?=$builder->getClassName($builder->getModelClass()) ?> model
+    * If deletion is successful, the browser will be redirected to the 'index' page.
+    */
+    public function DeleteAction()
+    {
+        $model = $this->findModel($this->request->get());
+        try {
+            $model->delete();
+        } catch (Exception $e) {
+            $message = new Message($e->getMessage());
+            $model->appendMessage($message);
+            $this->flashSession->error($e);
+        }
+    }
+
+    /**
+    * Find model based on $_GET parameters
+    * @param array $params
+    * @return \<?= $builder->getModelClass() . "\n" ?>
+    * @throws Exception
+    */
+    protected function findModel(array $params)
+    {
+        unset ($params['_url']);
+        $condition = '';
+        foreach ($params as $key => $value) {
+            $condition .= $key . ' = ' . ":$key: AND ";
+        }
+        $condition = rtrim($condition, 'AND ');
+
+        $model = <?= $builder->getClassName($builder->getModelClass()) ?>::findFirst([$condition, 'bind' => $params]);
+        if (!$model) {
+            throw new Exception('No model found');
+        }
+        return $model;
+    }
+
+    /**
+    * Generate params for redirecting
+    * @param <?=$builder->getClassName($builder->getModelClass()) ?> $model
+    * @return array
+    */
+    protected function generateParams(<?=$builder->getClassName($builder->getModelClass()) ?> $model)
+    {
+        /**
+        * @var Memory $metaData
+        */
+        $metaData = $this->modelsMetadata;
+        $pks = $metaData->getPrimaryKeyAttributes($model);
+        $output = [];
+        foreach ($pks as $pk) {
+            $output[$pk]= $model->$pk;
+        }
+        return $output;
+    }
+
+}

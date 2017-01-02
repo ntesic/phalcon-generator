@@ -1,0 +1,26 @@
+<?php
+/**
+ * Copyright (c) 2016.
+ * @author Nikola Tesic (nikolatesic@gmail.com)
+ */
+
+/**
+ * Created by PhpStorm.
+ * User: Nikola
+ * Date: 12/29/2016
+ * Time: 11:21 AM
+ */
+/**
+ * @var \ntesic\generator\generator\crud\Builder $builder
+ */
+echo "<?php\n";
+?>
+
+namespace <?= $builder->getNamespace($builder->getControllerClass()) ?>;
+
+use <?= $builder->getNamespace($builder->getControllerClass()) ?>\Base\<?=$builder->getClassName($builder->getControllerClass()) ?> as BaseController;
+
+class <?= $builder->getClassName($builder->getControllerClass()) ?> extends BaseController
+{
+
+}

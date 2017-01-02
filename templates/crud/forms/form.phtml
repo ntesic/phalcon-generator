@@ -1,0 +1,34 @@
+<?php
+/**
+ * Copyright (c) 2016.
+ * @author Nikola Tesic (nikolatesic@gmail.com)
+ */
+
+/**
+ * Created by PhpStorm.
+ * User: Nikola
+ * Date: 12/29/2016
+ * Time: 11:20 AM
+ */
+/**
+ * @var \ntesic\generator\generator\crud\Builder $builder
+ */
+echo "<?php\n";
+?>
+namespace <?=$builder->getNamespace($builder->getFormClass()) ?>;
+
+use \ntesic\boilerplate\Form\Form as BaseForm;
+
+class <?=$builder->getClassName($builder->getFormClass()) ?> extends BaseForm
+{
+
+    public function initialize()
+    {
+        parent::initialize();
+<?php
+foreach ($builder->getDataTypes() as $column) {
+    echo $builder->generateFormElement($column);
+}
+?>
+    }
+}

@@ -1,0 +1,64 @@
+<?php
+/**
+ * @var \ntesic\generator\generator\crud\Builder $builder
+ */
+echo "<?php\n";
+?>
+
+/**
+* @var \Phalcon\Mvc\View $this
+* @var <?= $builder->getModelClass() ?> $model
+*/
+
+use ntesic\boilerplate\Helpers\Tag;
+use ntesic\boilerplate\Widgets\DetailView;
+<?= "?>" ?>
+
+<h1>
+    <?=\ntesic\boilerplate\Helpers\Text::singularize(\ntesic\boilerplate\Helpers\Text::camel2words($builder->getClassName($builder->getModelClass()))) . "\n"?>
+    <small>
+        <?= "<?= \$model->toString ?>\n" ?>
+    </small>
+</h1>
+
+<div class="clearfix crud-navigation">
+    <!-- menu buttons -->
+    <div class='pull-left'>
+        <?= "<?= Tag::linkTo([\n"?>
+            'action' => $this->url->get('update', <?= $builder->generateUrlParams() ?>, null, $this->router->getModuleName() . '/' . $this->router->getControllerName() . '/'),
+            'text' => '<span class="glyphicon glyphicon-pencil"></span> Edit',
+            'class' => 'btn btn-info',
+        ]) ?>
+        <?= "<?= Tag::linkTo([\n"?>
+            'action' => $this->url->get('create', null, null, $this->router->getModuleName() . '/' . $this->router->getControllerName() . '/'),
+            'text' => '<span class="glyphicon glyphicon-plus"></span> New',
+            'class' => 'btn btn-success',
+        ]) ?>
+    </div>
+    <div class="pull-right">
+        <?= "<?= Tag::linkTo([\n"?>
+            'action' => $this->url->get('index', null, null, $this->router->getModuleName() . '/' . $this->router->getControllerName() . '/'),
+            'text' => '<span class="glyphicon glyphicon-list"></span> List',
+            'class' => 'btn btn-default',
+        ]) ?>
+    </div>
+</div>
+
+<?= "<?= DetailView::widget([\n" ?>
+    'model' => $model,
+    'attributes' => [
+<?= $builder->getDetailsViewAttributes() ?>
+    ],
+]) ?>
+<hr/>
+
+<?= "<?= Tag::linkTo([\n"?>
+    'action' => $this->url->get('delete', <?= $builder->generateUrlParams() ?>, null, $this->router->getModuleName() . '/' . $this->router->getControllerName() . '/'),
+    'text' => '<span class="glyphicon glyphicon-trash"></span> Delete',
+    'class' => 'btn btn-danger',
+    'data-confirm' => 'Are you sure to delete this item?',
+    'data-method' => 'post',
+    'local' => true,
+]);
+?>
+

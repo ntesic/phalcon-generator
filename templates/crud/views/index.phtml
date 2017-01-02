@@ -1,0 +1,47 @@
+<?php
+/**
+ * @var \ntesic\generator\generator\crud\Builder $builder
+ */
+echo "<?php\n"
+?>
+/**
+* @var \Phalcon\Mvc\View $this
+* @var \ntesic\boilerplate\data\QueryDataProvider $dataProvider
+* @var string $script_foot
+*/
+
+use \ntesic\Helpers\Tag;
+
+echo \ntesic\boilerplate\grid\KartikGridView::widget([
+    'columns' => [
+        <?= $builder->getGridViewAttributes() ?>
+        [
+            'class' => '\ntesic\boilerplate\grid\CheckboxColumn',
+        ],
+        [
+            'class' => '\ntesic\boilerplate\grid\ActionColumn',
+        ],
+    ],
+    'dataProvider' => $dataProvider,
+    'options' => [
+        'id' => 'branch-grid'
+    ],
+    'toolbar' => [
+        [
+            'content' => $this->jquery->bootstrap()->htmlDropdown('drop', 'test1', ['test'])->compile($this->jquery),
+        ],
+    ],
+    'panel' => [
+        'heading' => "<h3 class=\"panel-title\"><i class=\"glyphicon glyphicon-list\"></i>  " . '<?=\ntesic\boilerplate\Helpers\Text::pluralize(\ntesic\boilerplate\Helpers\Text::camel2words($builder->getClassName($builder->getModelClass()))) ?>' . "</h3>",
+        'type' => 'default',
+        'before' => Tag::linkTo([
+            'action' => $this->url->get('create', null, null, $this->router->getModuleName() . '/' . $this->router->getControllerName() . '/'),
+            'text' => '<span class="glyphicon glyphicon-plus"></span> New',
+            'class' => 'btn btn-success',
+        ]),
+    ],
+]);
+
+echo $script_foot;
+?>
+
