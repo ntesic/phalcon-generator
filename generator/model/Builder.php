@@ -99,6 +99,7 @@ class Builder extends \ntesic\generator\generator\Builder
         $templateRelation = "        \$this->%s(%s, '%s', %s, %s);" . PHP_EOL;
         $initialize = [];
         $entityNamespace = $this->namespace . "\\";
+        $aliases = [];
         foreach ($this->db->listTables() as $tableName) {
             foreach ($this->db->describeReferences($tableName, $this->schema) as $reference) {
                 if ($reference->getReferencedTable() != $this->getTable()) {
@@ -107,27 +108,40 @@ class Builder extends \ntesic\generator\generator\Builder
 
                 $refColumns = $reference->getReferencedColumns();
                 $columns = $reference->getColumns();
+                $alias = Text::camelize($tableName);
+                while (isset($aliases[$alias])) {
+                    // If alias exist, increment by on until we find the one that is not yet used
+                    $alias = Text::increment($alias);
+                }
+                $aliases[$alias] = $alias;
                 $initialize[] = sprintf(
                     $templateRelation,
                     'hasMany',
                     (count($refColumns) == 1) ? '\'' . $refColumns[0] . '\'' : $this->compositeColumns($refColumns),
                     $entityNamespace . Text::camelize($tableName),
                     (count($columns) == 1) ? '\'' . $columns[0] . '\'' : $this->compositeColumns($columns),
-                    "['alias' => '" . Text::camelize($tableName) . "']"
+                    "['alias' => '" . $alias . "']"
                 );
             }
         }
 
+        $aliases = [];
         foreach ($this->db->describeReferences($this->getTable(), $this->getSchema()) as $reference) {
             $refColumns = $reference->getReferencedColumns();
             $columns = $reference->getColumns();
+            $alias = Text::camelize($reference->getReferencedTable());
+            while (isset($aliases[$alias])) {
+                // If alias exist, increment by on until we find the one that is not yet used
+                $alias = Text::increment($alias);
+            }
+            $aliases[$alias] = $alias;
             $initialize[] = sprintf(
                 $templateRelation,
                 'belongsTo',
                 (count($columns) == 1) ? '\'' . $columns[0] . '\'' : $this->compositeColumns($columns),
                 $this->namespace . '\\' . Text::camelize($reference->getReferencedTable()),
                 (count($refColumns) == 1) ? '\'' . $refColumns[0] . '\'' : $this->compositeColumns($refColumns),
-                "['alias' => '" . Text::camelize($reference->getReferencedTable()) . "']"
+                "['alias' => '" . $alias . "']"
             );
         }
         return $initialize;

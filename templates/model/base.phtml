@@ -88,6 +88,25 @@ foreach ($builder->getDbColumns() as $column) {
     }
 
     /**
+     * @return array
+     */
+    public function labels()
+    {
+        return [
+<?php
+foreach ($builder->getDbColumns() as $column) {
+    $label = \ntesic\boilerplate\Helpers\Text::camel2words($column->getName());
+    if (!empty($label) && substr_compare($label, ' id', -3, 3, true) === 0) {
+        $label = substr($label, 0, -3); // Removing ID from label
+    }
+
+    echo '            ' . sprintf('\'%s\' => \'%s\'', $column->getName(), $label) . ",\n";
+}
+?>
+        ];
+    }
+
+    /**
      * Auto generated method, that returns a human-readable name as string
      * for this model. This string can be called in foreign dropdown-fields or
      * foreign index-views as a representative value for the current instance.
