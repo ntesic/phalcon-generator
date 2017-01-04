@@ -45,12 +45,12 @@ class Builder extends BaseBuilder
 
     protected function init()
     {
-        parent::init();
         $this->metaData = new Memory($this->model);
         $this->model = new $this->modelClass;
         $this->table = $this->model->getSource();
         $this->schema = $this->model->getSchema();
         $this->viewPath = rtrim(str_replace('APP_PATH', APP_PATH, $this->viewPath) . '/');
+        parent::init();
     }
 
 
@@ -282,31 +282,14 @@ class Builder extends BaseBuilder
             $element = "\t\t" . $this->getElementClass('email', $name);
         }
         // Add validators
-        if ($required) {
-            $element .= "\t\t" . $this->addValidator(self::VALIDATOR_REQUIRED, $name);
-        }
+        $element .= $this->addValidator($column, self::VALIDATE_FORM);
         // Add filters
         if ((strpos($name, 'email') !== false)) {
-            $element .= $this->addValidator(self::VALIDATOR_EMAIL, $name);
             $filters[] = self::FILTER_EMAIL;
         }
         $element .= "\t\t" . $this->addFilters($filters, $name);
         $element .= "\$this->add(\$$name);\n\n";
         return $element;
-    }
-
-    /**
-     * Add validators to form element
-     * @param $type
-     * @param $name
-     * @return string
-     */
-    protected function addValidator($type, $name)
-    {
-        switch ($type) {
-            case self::VALIDATOR_REQUIRED:
-                return "\$$name" . "->addValidator(new \\Phalcon\\Validation\\Validator\\PresenceOf(['message' => 'The " . \ntesic\boilerplate\Helpers\Text::camel2words($name) . " is required']));\n";
-        }
     }
 
     /**

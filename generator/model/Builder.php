@@ -200,32 +200,19 @@ class Builder extends \ntesic\generator\generator\Builder
         return $toString;
     }
 
-    /**
-     * Add validators to model
-     * @param $type
-     * @param $name
-     * @return string
-     */
-    public function addValidator($type, $name)
+    public function generateEnumConstants()
     {
-
-        return "\t\t\$validator->add(
-            '$name',
-            new " . $this->validators[$type] . "([
-                'message' => '$name is required field',
-            ])
-        );
-";
-//        switch ($type) {
-//            case self::VALIDATOR_REQUIRED:
-//                return "\t\t\$validator->add(
-//            '$name',
-//            new \\Phalcon\\Validation\\Validator\\PresenceOf([
-//                'message' => '$name is required field',
-//            ])
-//        );
-//";
-//        }
+        if (empty($this->enums)) {
+            return false;
+        }
+        $output = '';
+        foreach ($this->enums as $column => $values) {
+            foreach ($values as $const => $value) {
+                $template = "\tconst %s = '%s';\n";
+                $output .= sprintf($template, $const, $value);
+            }
+        }
+        return $output;
     }
 
 }

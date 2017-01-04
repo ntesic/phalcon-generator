@@ -26,6 +26,10 @@ class <?=$builder->getClassName($builder->getModelClass()) ?> extends BaseModel
 {
 
 <?php
+if ($builder->generateEnumConstants()) {
+    echo "\t//Enum values\n";
+    echo $builder->generateEnumConstants();
+}
 // Generate model attributes
 foreach ($builder->getDbColumns() as $column) {
     $templateAttributes = <<<EOD
@@ -118,13 +122,19 @@ foreach ($builder->getDbColumns() as $column) {
         return $this-><?=$builder->getToString() ?>;
     }
 
+    /**
+     * Set validation rules
+     *
+     * @return bool
+     */
     public function validation()
     {
         $validator = new Validation();
 <?php
 foreach($builder->getDbColumns() as $column) {
-    echo $builder->addValidator($builder::VALIDATOR_REQUIRED, $column->getName());
+    echo $builder->addValidator($column, $builder::VALIDATE_MODEL);
 }
 ?>
+        return $this->validate($validator);
     }
 }

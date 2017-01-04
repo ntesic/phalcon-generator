@@ -31,12 +31,8 @@ use Phalcon\Validation;
 abstract class Builder extends Component
 {
 
-    const VALIDATOR_REQUIRED = 1;
-    const VALIDATOR_EMAIL = 2;
-    const VALIDATOR_DATE = 3;
-    const VALIDATOR_UNIQUE = 4;
-    const VALIDATOR_URL = 5;
-    const VALIDATOR_STRING_LENGTH = 6;
+    const VALIDATE_MODEL = 1;
+    const VALIDATE_FORM = 2;
 
     const FILTER_EMAIL = 'email';
     const FILTER_STRING = 'string';
@@ -83,17 +79,21 @@ abstract class Builder extends Component
      */
     protected $template;
     /**
-     * @var array
+     * @var Column[]
      */
     protected $dbColumns;
     /**
      * @var array
      */
+    protected $uniqueIndexes;
+    /**
+     * @var array
+     */
+    protected $enums = [];
+    /**
+     * @var array
+     */
     public $errors = [];
-
-    protected $validators = [
-        self::VALIDATOR_REQUIRED => '\Phalcon\Validation\Validator\PresenceOf',
-    ];
 
     public function __construct(array $options)
     {
@@ -109,7 +109,9 @@ abstract class Builder extends Component
     {
         $this->template = rtrim($this->template, '/');
         $this->dbColumns = $this->db->describeColumns($this->getTable());
+        $this->initUniqueIndexes();
         $this->initForeignKeys();
+        $this->initEnums();
     }
 
     /**
@@ -270,17 +272,123 @@ abstract class Builder extends Component
     }
 
     /**
-     * Add validators to form element
-     * @param $type
-     * @param $name
+     * Initialize all ENUM type columns and store their values
+     */
+    public function initEnums()
+    {
+        $columns = $this->db->fetchAll($this->db->getDialect()->describeColumns($this->getTable()));
+        foreach ($columns as $column) {
+            if ((strpos($column['Type'], 'enum') !== false)) {
+                if (preg_match('/^(\w+)(?:\(([^\)]+)\))?/', $column['Type'], $matches)) {
+                    $values = explode(',', $matches[2]);
+                    foreach ($values as $i => $value) {
+                        $value = trim($value, "'");
+                        $const_name = strtoupper($column['Field'] . '_' . $value);
+                        $const_name = preg_replace('/\s+/', '_', $const_name);
+                        $const_name = str_replace(['-', '_', ' '], '_', $const_name);
+                        $const_name = preg_replace('/[^A-Z0-9_]/', '', $const_name);
+                        $enumValues[$const_name] = $value;
+                    }
+                    $this->enums[$column['Field']] = $enumValues;
+                }
+            }
+        }
+    }
+
+    /**
+     * Check if column is ENUM type
+     * @param Column $column
+     * @return bool
+     */
+    public function isEnum(Column $column)
+    {
+        // If not MySql return false
+        if ($this->db->getDialectType() !== 'mysql') {
+            return false;
+        }
+        if (isset($this->enums[$column->getName()])) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Add Validator to form or model
+     * @param Column $column
+     * @param string $type
      * @return string
      */
-    protected function addValidator($type, $name)
+    public function addValidator(Column $column, $type = self::VALIDATE_MODEL)
     {
+        $name = $column->getName();
         switch ($type) {
-            case self::VALIDATOR_REQUIRED:
-                return "\$$name" . "->addValidator(new \\Phalcon\\Validation\\Validator\\PresenceOf(['message' => 'The " . \ntesic\boilerplate\Helpers\Text::camel2words($name) . " is required']));\n";
+            case self::VALIDATE_FORM:
+                $template = "\t\t\$$name" . "->addValidator(%s);\n";
+                break;
+            case self::VALIDATE_MODEL:
+                $template = "\t\t\$validator->add('$name', %s);\n";
+                break;
         }
+        $validators = [];
+        if ($column->isNotNull() && !$column->isAutoIncrement()) {
+            $validators[] = sprintf($template, "new \\Phalcon\\Validation\\Validator\\PresenceOf(['message' => 'The " . \ntesic\boilerplate\Helpers\Text::camel2words($name) . " is required'])");
+        }
+        if ((strpos($column->getName(), 'email') !== false)) {
+            $validators[] = sprintf($template, "new \\Phalcon\\Validation\\Validator\\Email(['message' => 'The " . \ntesic\boilerplate\Helpers\Text::camel2words($name) . " need to be email'])");
+        }
+        if ((strpos($column->getName(), 'url') !== false) || (strpos($column->getName(), 'link') !== false)) {
+            $validators[] = sprintf($template, "new \\Phalcon\\Validation\\Validator\\Url(['message' => 'The " . \ntesic\boilerplate\Helpers\Text::camel2words($name) . " need to be url format'])");
+        }
+        if ($column->getType() === Column::TYPE_VARCHAR && $column->getSize() > 0) {
+            $validators[] = sprintf($template, "new \\Phalcon\\Validation\\Validator\\StringLength(['min' => 0, 'max' => " . $column->getSize() ."])");
+        }
+        if ($column->getType() === Column::TYPE_INTEGER && !$column->isUnsigned()) {
+            $validators[] = sprintf($template, "new \\Phalcon\\Validation\\Validator\\Digit(['message' => 'The " . \ntesic\boilerplate\Helpers\Text::camel2words($name) . " need to be number only'])");
+        }
+        if ($column->getType() === Column::TYPE_INTEGER && $column->isUnsigned()) {
+            $validators[] = sprintf($template, "new \\Phalcon\\Validation\\Validator\\Numericality(['message' => 'The " . \ntesic\boilerplate\Helpers\Text::camel2words($name) . " need to be number only'])");
+        }
+        if ($this->isUnique($column)) {
+            $validators[] = sprintf($template, "new \\Phalcon\\Validation\\Validator\\Uniqueness(['message' => 'The " . \ntesic\boilerplate\Helpers\Text::camel2words($name) . " need to be unique'])");
+        }
+        if ($this->isEnum($column)) {
+            $enum = '';
+            foreach ($this->enums[$column->getName()] as $const => $value) {
+                $enum .= "\n\t\t\t\tself::$const,";
+            }
+            $enum = rtrim($enum, ', ');
+            $validators[] = sprintf($template, "new \\Phalcon\\Validation\\Validator\\InclusionIn([
+            'domain' => [$enum
+            ],
+            'message' => 'The " . \ntesic\boilerplate\Helpers\Text::camel2words($name) . " need to be unique'
+        ])");
+        }
+        return implode("", $validators);
+    }
+
+    protected function initUniqueIndexes()
+    {
+        /**
+         * @var Db\Index[] $indexes
+         */
+        $indexes = $this->db->describeIndexes($this->getTable());
+        foreach ($indexes as $index) {
+            if ($index->getType() == 'UNIQUE') {
+                foreach ($index->getColumns() as $column) {
+                    $this->uniqueIndexes[$column] = true;
+                }
+            }
+        }
+    }
+
+    /**
+     * Return if column have unique index
+     * @param Column $column
+     * @return bool
+     */
+    protected function isUnique(Column $column)
+    {
+        return isset($this->uniqueIndexes[$column->getName()]);
     }
 
     /**
