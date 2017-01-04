@@ -354,13 +354,12 @@ abstract class Builder extends Component
         if ($this->isEnum($column)) {
             $enum = '';
             foreach ($this->enums[$column->getName()] as $const => $value) {
-                $enum .= "\n\t\t\t\tself::$const,";
+                $enum .= "\n\t\t\t\t\\" . $this->getModelClass() ."::$const,";
             }
             $enum = rtrim($enum, ', ');
             $validators[] = sprintf($template, "new \\Phalcon\\Validation\\Validator\\InclusionIn([
             'domain' => [$enum
-            ],
-            'message' => 'The " . \ntesic\boilerplate\Helpers\Text::camel2words($name) . " need to be unique'
+            ]
         ])");
         }
         return implode("", $validators);

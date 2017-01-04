@@ -10,14 +10,17 @@
  * Date: 12/30/2016
  * Time: 5:47 PM
  */
+/**
+ * @var \ntesic\generator\generator\model\Builder $builder
+ */
 echo "<?php\n";
 ?>
 
 namespace App\Models;
 
-use App\Models\Base\Test as BaseModel;
+use App\Models\Base\<?=$builder->getClassName($builder->getModelClass()) ?> as BaseModel;
 
-class Test extends BaseModel
+class <?=$builder->getClassName($builder->getModelClass()) ?> extends BaseModel
 {
 
 }

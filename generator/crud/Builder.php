@@ -192,7 +192,6 @@ class Builder extends BaseBuilder
             $referencedColumn = $reference->getReferencedColumns()[0];
             return "\t\t[
             'attribute' => '" . $column->getName() . "',
-            'label' => '" . Text::humanize($column->getName()) . "',
             'content' => function(\$model, \$key, \$index){
                 return Tag::linkTo([
                     \$this->url->get('/" . Text::uncamelize($referencedModel, '_') . "/view',['$referencedColumn' => \$model->" . $column->getName() . "], null, \$this->router->getModuleName()),
@@ -267,6 +266,7 @@ class Builder extends BaseBuilder
         $ai = $column->isAutoIncrement();
         $required = $column->isNotNull();
         $pk = $column->isPrimary();
+        $isEnum = $this->isEnum($column);
         $isForeignKeyColumn = $this->isForeignKey($column);
         $filters = [];
         if ($ai) {
@@ -276,8 +276,12 @@ class Builder extends BaseBuilder
         $element = "\t\t" . $this->getElementClass('text', $name);
         if ($isForeignKeyColumn) {
             $element = "\t\t" . $this->getSelectBox($column);
+        } elseif ($isEnum) {
+            $element = "\t\t" . $this->getSelectBoxEnum($column);
         } elseif ($type == Column::TYPE_DATETIME) {
             $element = "\t\t" . $this->getElementClass('date', $name);
+        } elseif ($type === Column::TYPE_BOOLEAN || ($type === Column::TYPE_INTEGER && $column->getSize() == 1)) {
+            $element = "\t\t" . $this->getElementClass('boolean', $name);
         } elseif ((strpos($name, 'email') !== false)) {
             $element = "\t\t" . $this->getElementClass('email', $name);
         }
@@ -317,6 +321,21 @@ class Builder extends BaseBuilder
         }
     }
 
+    protected function getSelectBoxEnum(Column $column)
+    {
+        $name = $column->getName();
+        $enums = array_values($this->enums[$column->getName()]);
+        $enums = '';
+        foreach ($this->enums[$column->getName()] as $const => $value) {
+            $enums .= "\n\t\t\t\t'$value' => '$value',";
+        }
+        $enums = rtrim($enums,',');
+        return "\$$name = new \\Phalcon\\Forms\\Element\\Select(
+            '$name',
+            [$enums
+            ]
+        );\n";
+    }
     /**
      * Generate select box for columns that have foreign keys
      * @param Column $column
