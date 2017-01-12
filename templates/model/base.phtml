@@ -19,10 +19,10 @@ echo "<?php\n";
 
 namespace <?=$builder->getNamespace($builder->getModelClass())?>\Base;
 
-use ntesic\boilerplate\models\BaseModel;
+use <?=$builder->baseModel ?>;
 use Phalcon\Validation;
 
-class <?=$builder->getClassName($builder->getModelClass()) ?> extends BaseModel
+class <?=$builder->getClassName($builder->getModelClass()) ?> extends <?=$builder->getClassName($builder->baseModel) . PHP_EOL ?>
 {
 
 <?php

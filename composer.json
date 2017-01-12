@@ -11,7 +11,8 @@
 	"require": {
 		"php": "^7.0",
 		"ext-phalcon" : "^3.0",
-		"ntesic/phalcon-boilerplate": "@dev"
+		"ntesic/phalcon-boilerplate": "@dev",
+		"phpspec/php-diff": "*"
 	},
 	"autoload": {
 		"psr-4": {

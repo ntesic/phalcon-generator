@@ -40,9 +40,18 @@ class Form extends \ntesic\boilerplate\Form\Form
         $nameSpace->addValidator(new \Phalcon\Validation\Validator\PresenceOf(['message' => 'The Namespace is required']));
         $this->add($nameSpace);
 
+        $baseModel = new \Phalcon\Forms\Element\Text("baseModel", ['value' => 'ntesic\\boilerplate\\models\\BaseModel']);
+        $baseModel->addValidator(new \Phalcon\Validation\Validator\PresenceOf(['message' => 'The Base Model name is required']));
+        $this->add($baseModel);
+
         $template = new \Phalcon\Forms\Element\Text("template", ['value' => realpath(__DIR__ . '/../../') . '/templates']);
         $template->addValidator(new \Phalcon\Validation\Validator\PresenceOf(['message' => 'The Template Path is required']));
         $this->add($template);
 
+    }
+
+    protected function beforeEnd()
+    {
+        return $this->view->partial('append');
     }
 }

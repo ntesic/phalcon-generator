@@ -11,6 +11,16 @@ echo "<?php\n"
 */
 
 use \ntesic\Helpers\Tag;
+$inlineJs = "var gridViewKey = '" . $this->router->getControllerName() . "';";
+$inlineJs .="var currentUrl = '" . $this->router->getModuleName() . "/" . $this->router->getControllerName() ."';";
+$this->assets->addInlineJs($inlineJs);
+
+$deleteMenu = new \Ajax\bootstrap\html\content\HtmlDropdownItem('delete');
+$deleteMenu->setCaption('<i class="fa fa-trash">&nbsp;</i>Delete')->onClick('deleteMultiple();');
+$dropdownMenu = $this->jquery->bootstrap()->htmlDropdown('actions', '<span class="glyphicon glyphicon-flash"></span> Selected', [$deleteMenu,], 'btn-default');
+$selectedMenu = $this->jquery->bootstrap()->htmlButtongroups('btn-group');
+$selectedMenu->addElement($dropdownMenu);
+$selectedMenu->compile($this->jquery);
 
 echo \ntesic\boilerplate\grid\KartikGridView::widget([
     'columns' => [
@@ -24,11 +34,11 @@ echo \ntesic\boilerplate\grid\KartikGridView::widget([
     ],
     'dataProvider' => $dataProvider,
     'options' => [
-        'id' => 'branch-grid'
+        'id' => $this->router->getControllerName() . '-grid'
     ],
     'toolbar' => [
         [
-            'content' => $this->jquery->bootstrap()->htmlDropdown('drop', 'test1', ['test'])->compile($this->jquery),
+            'content' => $selectedMenu,
         ],
     ],
     'panel' => [
@@ -42,6 +52,5 @@ echo \ntesic\boilerplate\grid\KartikGridView::widget([
     ],
 ]);
 
-echo $script_foot;
 ?>
 

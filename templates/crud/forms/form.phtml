@@ -25,6 +25,8 @@ class <?=$builder->getClassName($builder->getFormClass()) ?> extends BaseForm
     public function initialize()
     {
         parent::initialize();
+        $csrf = new \Phalcon\Forms\Element\Hidden($this->security->getTokenKey(), ['value' => $this->security->getToken()]);
+        $this->add($csrf);
 <?php
 foreach ($builder->getDataTypes() as $column) {
     echo $builder->generateFormElement($column);

@@ -33,6 +33,10 @@ class Builder extends BaseBuilder
     /**
      * @var string
      */
+    public $baseController;
+    /**
+     * @var string
+     */
     protected $viewPath;
     /**
      * @var string
@@ -49,7 +53,7 @@ class Builder extends BaseBuilder
         $this->model = new $this->modelClass;
         $this->table = $this->model->getSource();
         $this->schema = $this->model->getSchema();
-        $this->viewPath = rtrim(str_replace('APP_PATH', APP_PATH, $this->viewPath) . '/');
+        $this->viewPath = rtrim(str_replace('APP_PATH', APP_PATH, $this->viewPath), '/');
         parent::init();
     }
 
@@ -216,8 +220,8 @@ class Builder extends BaseBuilder
             $subDir = str_replace('Controller', '', $this->getClassName($this->getControllerClass()));
             $subDir = Text::uncamelize($subDir, '-');
             $outputFile = $this->viewPath . '/' . $subDir . '/' . $template . '.php';
-            $codeFile = new CodeFile($outputFile, $this->render('crud/views/' . $template));
-            $codeFile->save();
+            $this->files[] = $codeFile = new CodeFile($outputFile, $this->render('crud/views/' . $template));
+//            $codeFile->save();
         }
     }
 
@@ -231,8 +235,8 @@ class Builder extends BaseBuilder
             $lastPart = count($outputFormFile) - 1;
             $outputFormFile = $outputFormFile[$lastPart];
             $outputFile = self::namespace2Dir($this->formClass) . '/' . $outputFormFile . '.php';
-            $codeFile = new CodeFile($outputFile, $this->render('crud/forms/' . $template));
-            $codeFile->save();
+            $this->files[] = $codeFile = new CodeFile($outputFile, $this->render('crud/forms/' . $template));
+//            $codeFile->save();
         }
     }
 
@@ -248,8 +252,8 @@ class Builder extends BaseBuilder
                 $baseAppend = 'base/';
             }
             $outputFile = self::namespace2Dir($this->controllerClass) . '/' . $baseAppend . $outputControllerFile . '.php';
-            $codeFile = new CodeFile($outputFile, $this->render('crud/controllers/' . $template));
-            $codeFile->save();
+            $this->files[] = $codeFile = new CodeFile($outputFile, $this->render('crud/controllers/' . $template));
+//            $codeFile->save();
         }
     }
 

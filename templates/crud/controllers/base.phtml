@@ -18,7 +18,7 @@ echo "<?php\n";
 
 namespace <?= $builder->getNamespace($builder->getControllerClass()) ?>\Base;
 
-use ntesic\boilerplate\controllers\BaseController;
+use <?= $builder->baseController ?>;
 use ntesic\boilerplate\data\QueryDataProvider;
 use ntesic\boilerplate\Helpers\Url;
 use Phalcon\Exception;
@@ -27,7 +27,7 @@ use <?= $builder->getFormClass() ?>;
 use Phalcon\Mvc\Model\Message;
 use Phalcon\Mvc\Model\MetaData\Memory;
 
-class <?= $builder->getClassName($builder->getControllerClass()) ?> extends BaseController
+class <?= $builder->getClassName($builder->getControllerClass()) ?> extends <?= $builder->getClassName($builder->baseController) . PHP_EOL ?>
 {
 
     /**
@@ -145,6 +145,21 @@ class <?= $builder->getClassName($builder->getControllerClass()) ?> extends Base
             $model->appendMessage($message);
             $this->flashSession->error($e);
         }
+    }
+
+    public function DeleteMultipleAction()
+    {
+        $this->view->disable();
+        $pk = $this->request->getPost('pk'); // Array or selected records primary keys
+        // Preventing extra unnecessary query
+        if (!$pk) {
+            $this->response->setJsonContent(false);
+        }
+        foreach ($pk as $id) {
+            $this->findModel($id)->delete();
+        }
+        $this->response->setJsonContent(true);
+        return $this->response;
     }
 
     /**

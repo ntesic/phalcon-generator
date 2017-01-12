@@ -77,9 +77,9 @@ class IndexController extends BaseController
         $js = <<<JS
 var modelClass = $('#modelClass').val();
             $('#searchModelClass').val(modelClass + 'Search');
-            $('#controllerClass').val(modelClass.replace(/models/gi,'Controllers') + 'Controller');
-            $('#viewPath').val(modelClass.replace(/models?/gi,'views').replace(/\\\[^\\\]*$/,'').replace(/\\\/gi,'/').replace(/app/gi,'APP_PATH') );
-            $('#formClass').val(modelClass.replace(/models/gi,'Forms') + 'Form');
+            $('#controllerClass').val(modelClass.replace(/models/gi,'Backend\\\\Controllers') + 'Controller');
+            $('#viewPath').val(modelClass.replace(/models?/gi,'modules/backend/views').replace(/\\\[^\\\]*$/,'').replace(/\\\/gi,'/').replace(/app/gi,'APP_PATH') );
+            $('#formClass').val(modelClass.replace(/models/gi,'Backend\\\\Forms') + 'Form');
 JS;
         return $js;
     }

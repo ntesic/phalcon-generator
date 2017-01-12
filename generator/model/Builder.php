@@ -23,6 +23,13 @@ use Phalcon\Validation\Message;
 class Builder extends \ntesic\generator\generator\Builder
 {
 
+    /**
+     * @var string
+     */
+    public $baseModel;
+    /**
+     * @var string
+     */
     protected $namespace;
 
     public function generate()
@@ -86,8 +93,7 @@ class Builder extends \ntesic\generator\generator\Builder
                 $baseAppend = 'base/';
             }
             $outputFile = rtrim(self::namespace2Dir($this->modelClass), '/') . '/' . $baseAppend . $outputModelFile . '.php';
-            $codeFile = new CodeFile($outputFile, $this->render('model/' . $template));
-            $codeFile->save();
+            $this->files[] = $codeFile = new CodeFile($outputFile, $this->render('model/' . $template));
         }
     }
 

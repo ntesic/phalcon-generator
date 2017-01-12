@@ -94,6 +94,10 @@ abstract class Builder extends Component
      * @var array
      */
     public $errors = [];
+    /**
+     * @var array
+     */
+    public $files = [];
 
     public function __construct(array $options)
     {
@@ -525,4 +529,40 @@ abstract class Builder extends Component
         return strtolower($found);
     }
 
+    public function save(array $files, array $answers, &$results)
+    {
+        /**
+         * @var CodeFile $file
+         */
+        foreach ($files as $file) {
+            $relativePath = $file->getRelativePath();
+            if (isset($answers[$file->id]) && $file->operation !== CodeFile::OP_SKIP) {
+                $error = $file->save();
+                if (is_string($error)) {
+                    $hasError = true;
+                    $lines[] = "generating $relativePath\n<span class=\"error\">$error</span>";
+                } else {
+                    $lines[] = $file->operation === CodeFile::OP_CREATE ? " generated $relativePath" : " overwrote $relativePath";
+                }
+            } else {
+                $lines[] = "   skipped $relativePath";
+            }
+        }
+
+        $lines[] = "done!\n";
+        $results = implode("\n", $lines);
+
+        return !$hasError;
+
+    }
+
+    /**
+     * Returns the message to be displayed when the newly generated code is saved successfully.
+     * Child classes may override this method to customize the message.
+     * @return string the message to be displayed when the newly generated code is saved successfully.
+     */
+    public function successMessage()
+    {
+        return 'The code has been generated successfully.';
+    }
 }
